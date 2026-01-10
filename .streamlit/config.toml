@@ -1,0 +1,22 @@
+[theme]
+# Cor primária (Botões, seleções, foco)
+# Sugestão: Um laranja de "obra" ou azul corporativo
+primaryColor = "#F39C12"
+
+# Cor de fundo da área principal
+backgroundColor = "#060c2f"
+
+# Cor de fundo da barra lateral (Menu)
+secondaryBackgroundColor = "#0c1f57"
+
+# Cor do texto
+textColor = "#FAFAFA"
+
+# Fonte do texto (sans serif é mais moderno)
+font = "sans serif"
+
+# Sets the background for dataframe headers specifically (overrides secondaryBackgroundColor)
+dataframeHeaderBackgroundColor = "#0c1f57"
+
+[server]
+runOnSave = true
