@@ -58,17 +58,18 @@ if categoria != None:
 
     # Formulário visual
     with st.container(border=True):
+        col1, col2, col3 = st.columns(3)
+        data_mov = col1.date_input(label="Data", value=datetime.date.today())
+        descricao = col3.text_input(label="Descrição", placeholder="Ex: Pagamento pedreiro, Compra Tintas")
+
         # --- Lógica Específica para MATERIAIS ---
         if categoria == "Material":
-            col1, col2 = st.columns(2)
-            data_mov = col1.date_input(label="Data", value=datetime.date.today())
-
-            st.info("Adicione os itens na tabela abaixo:")
             
             # Criamos um DataFrame vazio para servir de template
             df_template = pd.DataFrame({
-                "Descrição": pd.Series(dtype="string"),
-                "Qtd": pd.Series(dtype="float"),
+                "Item": pd.Series(dtype="string"),
+                "Subcategoria": pd.Series(dtype="string"),
+                "Quantidade": pd.Series(dtype="float"),
                 "Valor (R$)": pd.Series(dtype="float")
             })
 
@@ -76,8 +77,9 @@ if categoria != None:
                 df_template,
                 num_rows="dynamic",
                 column_config={
-                    "Descrição": st.column_config.TextColumn(required=True),
-                    "Qtd": st.column_config.NumberColumn(min_value=0.1, step=1.0, required=True),
+                    "Item": st.column_config.TextColumn(required=True),
+                    "Subcategoria": st.column_config.SelectboxColumn(options=utils.SUBCATEGORIAS_MATERIAIS),
+                    "Quantidade": st.column_config.NumberColumn(min_value=0.1, step=1.0, required=True),
                     "Valor (R$)": st.column_config.NumberColumn(min_value=0.0, format="R$ %.2f", required=True)
                 },
                 hide_index=True,
@@ -92,11 +94,7 @@ if categoria != None:
             valor = col2.number_input("Valor Total (R$)", value=total_calculado, format="%.2f", disabled=True)
 
         else:
-            col1, col2, col3 = st.columns(3)
-
-            data_mov = col1.date_input(label="Data", value=datetime.date.today())
             valor = col2.number_input("Valor Total (R$)", min_value=0.0, format="%.2f")
-            descricao = col3.text_input(label="Descrição", placeholder="Ex: Pagamento pedreiro, Compra Tintas")
 
         # Botão de Salvar
         if st.button(f"Confirmar Lançamento em '{categoria}'"):
@@ -108,24 +106,31 @@ if categoria != None:
                     if itens_compra.empty:
                         st.error("Adicione pelo menos um item na tabela.")
                     else:
-                        lista_envio = []
-                        # Transformamos o DataFrame em uma lista de dicionários para enviar ao Supabase
+                        # Transformamos o DataFrame em uma lista de itens para o JSON
+                        itens_list = []
                         for index, row in itens_compra.iterrows():
-                            if not row["Descrição"].strip():
+                            if not row["Item"].strip():
                                 st.error("Por favor, preencha todos os campos.")
                                 st.stop()
 
-                            lista_envio.append({
-                                "Data": data_mov.isoformat(),
-                                "Detalhes": None,
-                                "obra_id": obra_id,
-                                "Categoria": categoria,
-                                "Valor": row["Valor (R$)"],
-                                "Quantidade": row["Qtd"],
-                                "Descrição": row["Descrição"],
+                            itens_list.append({
+                                "Item": row["Item"],
+                                "Subcategoria": row["Subcategoria"],
+                                "Quantidade": row["Quantidade"],
+                                "Valor": row["Valor (R$)"]
                             })
                         
-                        # Salvar movimentações em lote
+                        lista_envio = [{
+                            "Data": data_mov.isoformat(),
+                            "Detalhes": None,
+                            "obra_id": obra_id,
+                            "Categoria": categoria,
+                            "Valor": valor,
+                            "Descrição": descricao,
+                            "Itens": itens_list
+                        }]
+                        
+                        # Salvar movimentação
                         utils.salvar_movimentacao(supabase, lista_envio)
                 
                 # Se for OUTRAS categorias, salvamos UMA linha
@@ -139,7 +144,6 @@ if categoria != None:
                             "obra_id": obra_id,
                             "Categoria": categoria,
                             "Valor": valor,
-                            "Quantidade": None,
                             "Descrição": descricao,
                         }]
                         
@@ -148,4 +152,3 @@ if categoria != None:
                         
             except Exception as e:
                 st.error(f"Erro ao salvar: {e}")
-

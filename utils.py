@@ -8,6 +8,9 @@ import os
 
 from PIL import Image
 
+# --- CONSTANTES GLOBAIS ---
+SUBCATEGORIAS_MATERIAIS = ["Geral", "Elétrica", "Hidráulica", "Pintura"]
+
 # --- GERENCIADOR DE COOKIES ---
 # O @st.cache_resource garante que o gerenciador seja carregado apenas uma vez
 @st.cache_resource()
@@ -20,7 +23,7 @@ cookie_manager = get_manager()
 
 def verificar_login(supabase):
     """
-    Verifica login e, CRUCIALMENTE, restaura a sessão no cliente Supabase.
+    Verifica login e restaura a sessão no cliente Supabase.
     """
     # 1. Se já está na memória RAM (navegação na mesma aba), tudo certo
     if "usuario_logado" in st.session_state and st.session_state["usuario_logado"]:
@@ -379,10 +382,12 @@ def popup_detalhar_material(supabase, lista_material):
             obra = col3.text_input("Obra", value=df_selecionado.iloc[0]["Obra"].upper(), disabled=True)
             categoria = col4.text_input("Categoria", value=df_selecionado.iloc[0]["Categoria"], disabled=True)
             valor_total = col5.number_input("Valor Total (R$)", value=df_selecionado.iloc[0]["Valor"], format="%.2f", disabled=True)
+            valor_total = col5.number_input("Valor Total (R$)", value=df_selecionado.iloc[0]["Valor"], format="%.2f", disabled=True)
             
             # Criamos um DataFrame vazio para servir de template
             df_template = pd.DataFrame({
-                "Descrição": pd.Series(dtype="string"),
+                "Item": pd.Series(dtype="string"),
+                "Subcategoria": pd.Series(dtype="string"),
                 "Quantidade": pd.Series(dtype="float"),
                 "Valor (R$)": pd.Series(dtype="float")
             })
@@ -391,7 +396,8 @@ def popup_detalhar_material(supabase, lista_material):
                 df_template,
                 num_rows="dynamic",
                 column_config={
-                    "Descrição": st.column_config.TextColumn(required=True),
+                    "Item": st.column_config.TextColumn(required=True),
+                    "Subcategoria": st.column_config.SelectboxColumn(options=SUBCATEGORIAS_MATERIAIS),
                     "Quantidade": st.column_config.NumberColumn(min_value=0.1, step=1.0, required=True),
                     "Valor (R$)": st.column_config.NumberColumn(min_value=0.0, format="R$ %.2f", required=True)
                 },
@@ -414,18 +420,25 @@ def popup_detalhar_material(supabase, lista_material):
                     obras_dict = {row["Nome"]: row["id"] for row in response.data} # Cria um mapa {Nome: ID}
                     obra_id = obras_dict[obra]
                     try:
-                        # Inserir cada item como uma movimentação separada
-                        lista_envio = []
+                        # Inserir como uma única movimentação com detalhamento em JSON
+                        itens_list = []
                         for index, row in itens_compra.iterrows():
-                            lista_envio.append({
-                                "obra_id": obra_id,
-                                "Data": data.isoformat(),
-                                "Detalhes": detalhes,
-                                "Categoria": categoria,
-                                "Descrição": row["Descrição"],
+                            itens_list.append({
+                                "Item": row["Item"],
+                                "Subcategoria": row["Subcategoria"],
                                 "Quantidade": row["Quantidade"],
                                 "Valor": row["Valor (R$)"]
                             })
+
+                        lista_envio = [{
+                            "obra_id": obra_id,
+                            "Data": data.isoformat(),
+                            "Detalhes": detalhes,
+                            "Categoria": categoria,
+                            "Descrição": "descricao",
+                            "Valor": valor_total,
+                            "Itens": itens_list
+                        }]
 
                         salvar_movimentacao(supabase, lista_envio)
                         time.sleep(1)
