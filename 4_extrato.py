@@ -75,7 +75,6 @@ if arquivo:
             "Obra": pd.Series(dtype="string"),
             "Categoria": pd.Series(dtype="string"),
             "Valor": df_extrato["Valor"].astype(str).str.replace(".", "", regex=False).str.replace(",", ".", regex=False).astype(float),
-            "Quantidade": pd.Series(dtype="float"),
             "Descrição": pd.Series(dtype="string"),
         })
 
@@ -100,7 +99,6 @@ if arquivo:
                     required=True,
                 ),
                 "Valor": st.column_config.NumberColumn(label="Valor (R$)", format="R$ %.2f", disabled=True),
-                "Quantidade": st.column_config.NumberColumn(label="Quantidade"),
                 "Descrição": st.column_config.TextColumn(label="Descrição", required=True),
             },
             hide_index=True,
@@ -143,7 +141,6 @@ if arquivo:
                             "obra_id": obra_id,
                             "Categoria": row["Categoria"],
                             "Valor": float(row["Valor"]),
-                            "Quantidade": None,
                             "Descrição": row["Descrição"],
                         }
                         lista_envio.append(item)

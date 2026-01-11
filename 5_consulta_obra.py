@@ -103,15 +103,38 @@ with tab_tabela:
             df_show = df_show[df_show["Categoria"].isin(filtro_cat)]
             
         # Limpeza visual da tabela
-        colunas_visiveis = ["Data", "Detalhes", "Quantidade", "Valor", "Categoria", "Descrição"]
-        st.dataframe(
+        colunas_visiveis = ["Data", "Detalhes", "Valor", "Categoria", "Descrição"]
+        
+        event = st.dataframe(
             df_show[colunas_visiveis], 
             width="stretch",
             column_config={
                 "Valor": st.column_config.NumberColumn(format="R$ %.2f"),
                 "Data": st.column_config.DateColumn("Data", format="DD/MM/YYYY")
-            }
+            },
+            on_select="rerun",
+            selection_mode="single-row"
         )
+
+        if len(event.selection["rows"]) > 0:
+            idx = event.selection["rows"][0]
+            row_selecionada = df_show.iloc[idx]
+            
+            # Verifica se tem itens detalhados (JSON)
+            if "Itens" in row_selecionada and row_selecionada["Itens"]:
+                @st.dialog("Detalhes da Compra")
+                def mostrar_detalhes(itens):
+                    df_itens = pd.DataFrame(itens)
+                    st.dataframe(
+                        df_itens, 
+                        column_config={
+                            "Valor": st.column_config.NumberColumn(format="R$ %.2f")
+                        },
+                        hide_index=True,
+                        width="stretch"
+                    )
+                
+                mostrar_detalhes(row_selecionada["Itens"])
 
 with tab_graficos:
     if not df.empty:
