@@ -376,13 +376,13 @@ def popup_detalhar_material(supabase, lista_material):
 
         # Formulário visual
         with st.form("form_detalhar_material"):
-            col1, col2, col3, col4, col5 = st.columns(5)
+            col1, col2, col3, col4, col5, col6 = st.columns(6)
             data = col1.date_input(label="Data", value=df_selecionado.iloc[0]["Data"], disabled=True)
             detalhes = col2.text_input("Detalhes", value=df_selecionado.iloc[0]["Detalhes"], disabled=True)
             obra = col3.text_input("Obra", value=df_selecionado.iloc[0]["Obra"].upper(), disabled=True)
             categoria = col4.text_input("Categoria", value=df_selecionado.iloc[0]["Categoria"], disabled=True)
             valor_total = col5.number_input("Valor Total (R$)", value=df_selecionado.iloc[0]["Valor"], format="%.2f", disabled=True)
-            valor_total = col5.number_input("Valor Total (R$)", value=df_selecionado.iloc[0]["Valor"], format="%.2f", disabled=True)
+            descricao = col6.text_input("Descrição", value=df_selecionado.iloc[0]["Descrição"], disabled=True)
             
             # Criamos um DataFrame vazio para servir de template
             df_template = pd.DataFrame({
@@ -422,7 +422,7 @@ def popup_detalhar_material(supabase, lista_material):
                     try:
                         # Inserir como uma única movimentação com detalhamento em JSON
                         itens_list = []
-                        for index, row in itens_compra.iterrows():
+                        for _, row in itens_compra.iterrows():
                             itens_list.append({
                                 "Item": row["Item"],
                                 "Subcategoria": row["Subcategoria"],
@@ -435,8 +435,8 @@ def popup_detalhar_material(supabase, lista_material):
                             "Data": data.isoformat(),
                             "Detalhes": detalhes,
                             "Categoria": categoria,
-                            "Descrição": "descricao",
                             "Valor": valor_total,
+                            "Descrição": descricao,
                             "Itens": itens_list
                         }]
 
