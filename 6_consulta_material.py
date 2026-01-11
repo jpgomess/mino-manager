@@ -62,10 +62,6 @@ for _, row in df_raw.iterrows():
 
 df = pd.DataFrame(rows_expanded)
 
-print(df_raw)
-
-print(df)
-
 # Tratamento de dados
 # Garante que números são números
 df["Quantidade"] = pd.to_numeric(df["Quantidade"])
