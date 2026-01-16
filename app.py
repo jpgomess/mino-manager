@@ -1,5 +1,10 @@
 import streamlit as st
 
+# --- DEBUG TEMPORÁRIO (Apague depois) ---
+st.write(f"Versão do Streamlit: {st.__version__}")
+st.write("Cookies encontrados:", st.context.cookies)
+# ----------------------------------------
+
 pg = st.navigation(
     {
         "": [st.Page("1_home.py", title="Home", icon=":material/home:")],
