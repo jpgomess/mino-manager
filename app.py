@@ -1,4 +1,5 @@
 import streamlit as st
+import utils
 
 # --- CONEXÃO COM O BANCO ---
 supabase = utils.get_supabase_client()
