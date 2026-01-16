@@ -25,10 +25,6 @@ if "supabase" not in st.session_state:
 
 supabase = st.session_state["supabase"]
 
-# --- Segurança ---
-
-usuario = utils.verificar_login(supabase)
-
 # --- Título da Página ---
 
 st.title("Importar Extrato Bancário 📥")
