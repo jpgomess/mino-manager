@@ -71,10 +71,13 @@ def tela_login(supabase, cookie_manager):
             with st.container(horizontal_alignment="center"):
                 with st.spinner():
                     time.sleep(1)
-
+                    
+            # Define validade de 7 dias
+            expire_date = datetime.datetime.now() + datetime.timedelta(days=7)
+            
             st.session_state["usuario_logado"] = res.user
-            cookie_manager.set("sb_access_token", res.session.access_token, key="set_access")
-            cookie_manager.set("sb_refresh_token", res.session.refresh_token, key="set_refresh")
+            cookie_manager.set("sb_access_token", res.session.access_token, key="set_access", expires_at=expire_date)
+            cookie_manager.set("sb_refresh_token", res.session.refresh_token, key="set_refresh", expires_at=expire_date)
 
             st.rerun()
             
