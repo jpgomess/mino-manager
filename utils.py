@@ -46,10 +46,10 @@ def verificar_login(supabase):
             pass
 
     # 3. Se nada funcionou, mostra login
-    tela_login(supabase)
+    tela_login(supabase, cookie_manager)
     st.stop()
 
-def tela_login(supabase):
+def tela_login(supabase, cookie_manager):
     """Login que salva Access Token E Refresh Token"""
     st.markdown("<style> [data-testid='stSidebar'] {display: none;} </style>", unsafe_allow_html=True)
     
