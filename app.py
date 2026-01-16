@@ -1,6 +1,13 @@
 import streamlit as st
 
-pg = st.navigation(
+# --- CONEXÃO COM O BANCO ---
+supabase = utils.get_supabase_client()
+
+# --- VERIFICAÇÃO ÚNICA ---
+usuario = utils.verificar_login(supabase)
+
+if usuario:
+    pg = st.navigation(
     {
         "": [st.Page("1_home.py", title="Home", icon=":material/home:")],
         "Cadastro": [
@@ -13,5 +20,8 @@ pg = st.navigation(
             st.Page("6_consulta_material.py", title="Consulta de Material", icon=":material/construction:"),
         ]
     }
-)
+    )
+else:
+    pg = st.navigation([st.Page("login.py", title="Login", icon=":material/login:")])
+
 pg.run()
