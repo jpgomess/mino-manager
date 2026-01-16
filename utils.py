@@ -9,15 +9,8 @@ import os
 from PIL import Image
 
 # --- CONSTANTES GLOBAIS ---
+
 SUBCATEGORIAS_MATERIAIS = ["Geral", "Elétrica", "Hidráulica", "Pintura"]
-
-# --- GERENCIADOR DE COOKIES ---
-# O @st.cache_resource garante que o gerenciador seja carregado apenas uma vez
-@st.cache_resource()
-def get_manager():
-    return stx.CookieManager()
-
-cookie_manager = get_manager()
 
 # --- Funções de Login ---
 
@@ -25,6 +18,8 @@ def verificar_login(supabase):
     """
     Verifica login e restaura a sessão no cliente Supabase.
     """
+    cookie_manager = stx.CookieManager(key="cookie_manager")
+    
     # 1. Se já está na memória RAM (navegação na mesma aba), tudo certo
     if "usuario_logado" in st.session_state and st.session_state["usuario_logado"]:
         return st.session_state["usuario_logado"]
