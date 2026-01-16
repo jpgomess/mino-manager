@@ -22,6 +22,6 @@ if usuario:
     }
     )
 else:
-    pg = st.navigation([st.Page("login.py", title="Login", icon=":material/login:")])
+    pg = st.navigation([st.Page(lambda: utils.pagina_login(supabase), title="Login", icon=":material/login:")])
 
 pg.run()
