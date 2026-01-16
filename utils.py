@@ -40,43 +40,39 @@ def verificar_sessao(supabase):
         
     return None
 
-def tela_login(supabase, cookie_manager):
-    """Login que salva Access Token E Refresh Token"""
-    st.markdown("<style> [data-testid='stSidebar'] {display: none;} </style>", unsafe_allow_html=True)
+def pagina_login(supabase):
+    """
+    Esta função será o CONTEÚDO da st.Page de Login.
+    Ela desenha o formulário e gerencia a escrita do cookie.
+    """
+    st.header("Login")
     
-    login_placeholder = st.empty()
-
-    with login_placeholder.container():
-        col1, col2, col3 = st.columns([1, 2, 1])
-        
-        with col2:
-            st.title("🔐 Acesso Restrito")
-            
-            with st.form(key="form_login"):
-                email = st.text_input("E-mail")
-                senha = st.text_input("Senha", type="password")
-                submit = st.form_submit_button("Entrar", type="primary", use_container_width=True)
-                
-    if submit:
+    # Instanciamos o manager AQUI, pois só precisamos dele para GRAVAR o cookie
+    cookie_manager = stx.CookieManager(key="login_writer")
+    
+    email = st.text_input("Email")
+    senha = st.text_input("Senha", type="password")
+    
+    if st.button("Entrar", type="primary"):
         try:
             res = supabase.auth.sign_in_with_password({"email": email, "password": senha})
             
-            login_placeholder.empty()
-            with st.container(horizontal_alignment="center"):
-                with st.spinner():
-                    time.sleep(1)
-                    
-            # Define validade de 7 dias
+            # Define validade
             expire_date = datetime.datetime.now() + datetime.timedelta(days=7)
             
+            # Grava Cookies
+            cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, path="/")
+            cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, path="/")
+            
+            # Atualiza sessão
             st.session_state["usuario_logado"] = res.user
-            cookie_manager.set("sb_access_token", res.session.access_token, key="set_access", expires_at=expire_date)
-            cookie_manager.set("sb_refresh_token", res.session.refresh_token, key="set_refresh", expires_at=expire_date)
-
-            st.rerun()
+            
+            st.success("Logado! Redirecionando...")
+            time.sleep(1)
+            st.rerun() # Recarrega o app para o app.py notar a mudança
             
         except Exception as e:
-            col2.error(f"Usuário ou senha incorretos.")
+            st.error(f"Erro ao entrar: {e}")
 
 def botao_logout():
     if st.sidebar.button("Sair"):
