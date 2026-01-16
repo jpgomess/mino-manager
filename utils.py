@@ -14,45 +14,30 @@ SUBCATEGORIAS_MATERIAIS = ["Geral", "Elétrica", "Hidráulica", "Pintura"]
 
 # --- Funções de Login ---
 
-def verificar_login(supabase):
-    # Instancia o manager apenas para escrita futura (não usamos para leitura aqui)
-    cookie_manager = stx.CookieManager(key="auth_manager")
+def verificar_sessao(supabase):
+    """
+    Função PURA: Apenas verifica se existe usuário logado.
+    Retorna o objeto User ou None. NÃO desenha nada.
+    """
     
-    # 1. Memória RAM
+    # 1. Prioridade: Memória RAM (Session State)
     if "usuario_logado" in st.session_state and st.session_state["usuario_logado"]:
-        print("DEBUG: Usuário encontrado na Session State (RAM).")
         return st.session_state["usuario_logado"]
 
-    # 2. Leitura Nativa de Cookies
-    print(f"DEBUG: Verificando Cookies... Chaves encontradas: {list(st.context.cookies.keys())}")
-    
-    access_token = st.context.cookies.get("sb_access_token")
-    refresh_token = st.context.cookies.get("sb_refresh_token")
-    
-    if access_token and refresh_token:
-        print("DEBUG: Tokens encontrados nos cookies. Tentando validar no Supabase...")
-        try:
-            # Tenta logar com os tokens
+    # 2. Prioridade: Cookies (Leitura Nativa Rápida)
+    try:
+        access_token = st.context.cookies.get("sb_access_token")
+        refresh_token = st.context.cookies.get("sb_refresh_token")
+        
+        if access_token and refresh_token:
+            # Tenta renovar a sessão no Supabase
             session = supabase.auth.set_session(access_token, refresh_token)
-            
             if session.user:
-                print(f"DEBUG: Sucesso! Usuário logado: {session.user.email}")
                 st.session_state["usuario_logado"] = session.user
                 return session.user
-            else:
-                print("DEBUG: Supabase não retornou usuário na sessão.")
-                
-        except Exception as e:
-            # AQUI ESTÁ O SEGREDO: Vamos ver o erro real
-            print(f"DEBUG: ERRO CRÍTICO AO VALIDAR TOKEN: {e}")
-            # Dica: Se o erro for 'invalid token', o cookie está velho ou corrompido
-    else:
-        print("DEBUG: Nenhum token de acesso encontrado nos cookies.")
-
-    # 3. Se falhou, mostra login
-    print("DEBUG: Redirecionando para tela de login.")
-    tela_login(supabase, cookie_manager) 
-    st.stop()
+    except Exception:
+        pass
+        
     return None
 
 def tela_login(supabase, cookie_manager):
