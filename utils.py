@@ -25,25 +25,22 @@ def verificar_login(supabase):
         return st.session_state["usuario_logado"]
 
     # 2. Tenta recuperar TOKENS do Cookie
-    access_token = cookie_manager.get(cookie="sb_access_token")
-    refresh_token = cookie_manager.get(cookie="sb_refresh_token")
-    
-    if access_token and refresh_token:
-        try:
-            # --- O PULO DO GATO ---
-            # Injetamos os tokens no cliente Supabase atual.
-            # Isso faz com que o 'supabase.table(...)' volte a funcionar com RLS.
+    try:
+        access_token = st.context.cookies.get("sb_access_token")
+        refresh_token = st.context.cookies.get("sb_refresh_token")
+        
+        if access_token and refresh_token:
             session = supabase.auth.set_session(access_token, refresh_token)
             
             if session.user:
                 st.session_state["usuario_logado"] = session.user
                 return session.user
                 
-        except Exception as e:
-            # Se o token expirou (refresh falhou), o set_session vai dar erro.
-            # Nesse caso, deixamos cair para a tela de login.
-            print(f"Sessão expirada: {e}")
-            pass
+    except Exception as e:
+        # Se o token expirou (refresh falhou), o set_session vai dar erro.
+        # Nesse caso, deixamos cair para a tela de login.
+        print(f"Sessão expirada: {e}")
+        pass
 
     # 3. Se nada funcionou, mostra login
     tela_login(supabase, cookie_manager)
