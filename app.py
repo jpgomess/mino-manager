@@ -5,7 +5,7 @@ import utils
 supabase = utils.get_supabase_client()
 
 # --- VERIFICAÇÃO ÚNICA ---
-usuario = utils.verificar_login(supabase)
+usuario = utils.verificar_sessao(supabase)
 
 if usuario:
     pg = st.navigation(
