@@ -15,15 +15,8 @@ utils.reduzir_espaco_topo()
 utils.adicionar_watermark()
 
 # --- Conexão com Supabase ---
-def init_connection():
-    url = st.secrets["supabase"]["url"]
-    key = st.secrets["supabase"]["key"]
-    return create_client(url, key)
 
-if "supabase" not in st.session_state:
-    st.session_state["supabase"] = init_connection()
-
-supabase = st.session_state["supabase"]
+supabase = utils.get_supabase_client()
 
 # --- Título da Página ---
 
