@@ -12,6 +12,17 @@ from PIL import Image
 
 SUBCATEGORIAS_MATERIAIS = ["Geral", "Elétrica", "Hidráulica", "Pintura"]
 
+# --- Conexão com o Supabase ---
+
+@st.cache_resource
+def get_supabase_client():
+    """
+    Cria a conexão com o Supabase apenas uma vez e a mantém em cache.
+    """
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
 # --- Funções de Login ---
 
 def verificar_sessao(supabase):
