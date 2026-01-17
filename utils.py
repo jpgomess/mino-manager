@@ -6,6 +6,7 @@ import base64
 import time
 import os
 
+from supabase import create_client
 from PIL import Image
 
 # --- CONSTANTES GLOBAIS ---
