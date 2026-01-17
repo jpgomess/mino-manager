@@ -73,8 +73,8 @@ def pagina_login(supabase):
             expire_date = datetime.datetime.now() + datetime.timedelta(days=7)
             
             # Grava Cookies
-            cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, path="/")
-            cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, path="/")
+            cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, path="/", key="set_access")
+            cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, path="/", key="set_refresh")
             
             # Atualiza sessão
             st.session_state["usuario_logado"] = res.user
