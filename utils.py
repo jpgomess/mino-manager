@@ -25,6 +25,9 @@ def recuperar_sessao(supabase):
     Tenta recuperar a sessão via Session State ou Cookies.
     Retorna o objeto User se autenticado, ou None se não autenticado.
     """
+
+    cookie_manager = get_manager()
+
     # Verifica se o usuário acabou de fazer logout para evitar relogin automático imediato
     if st.session_state.get("logout_flag"):
         return None
@@ -34,8 +37,8 @@ def recuperar_sessao(supabase):
         return st.session_state["usuario_logado"]
 
     # 2. Tenta recuperar TOKENS do Cookie
-    access_token = st.context.cookies.get("sb_access_token")
-    refresh_token = st.context.cookies.get("sb_refresh_token")
+    access_token = cookie_manager.get("sb_access_token")
+    refresh_token = cookie_manager.get("sb_refresh_token")
     
     if access_token and refresh_token:
         try:
