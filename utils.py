@@ -21,11 +21,12 @@ cookie_manager = get_manager()
 
 # --- Funções de Login ---
 
-def verificar_login(supabase):
+def recuperar_sessao(supabase):
     """
-    Verifica login e restaura a sessão no cliente Supabase.
+    Tenta recuperar a sessão via Session State ou Cookies.
+    Retorna o objeto User se autenticado, ou None se não autenticado.
     """
-    # 1. Se já está na memória RAM (navegação na mesma aba), tudo certo
+    # 1. Se o usuário já está logado na session_state, retorna o usuário.
     if "usuario_logado" in st.session_state and st.session_state["usuario_logado"]:
         return st.session_state["usuario_logado"]
 
@@ -35,9 +36,7 @@ def verificar_login(supabase):
     
     if access_token and refresh_token:
         try:
-            # --- O PULO DO GATO ---
-            # Injetamos os tokens no cliente Supabase atual.
-            # Isso faz com que o 'supabase.table(...)' volte a funcionar com RLS.
+            # Injeta os tokens no cliente Supabase para restaurar a sessão
             session = supabase.auth.set_session(access_token, refresh_token)
             
             if session.user:
@@ -45,14 +44,12 @@ def verificar_login(supabase):
                 return session.user
                 
         except Exception as e:
-            # Se o token expirou (refresh falhou), o set_session vai dar erro.
-            # Nesse caso, deixamos cair para a tela de login.
-            print(f"Sessão expirada: {e}")
+            # Se o token expirou ou é inválido, o set_session falhará.
+            # A execução continuará para a tela de login.
+            st.warning(f"Sua sessão expirou. Por favor, faça login novamente.")
             pass
 
-    # 3. Se nada funcionou, mostra login
-    tela_login(supabase)
-    st.stop()
+    return None
 
 def tela_login(supabase):
     """Login que salva Access Token E Refresh Token"""
@@ -64,7 +61,7 @@ def tela_login(supabase):
         col1, col2, col3 = st.columns([1, 2, 1])
         
         with col2:
-            st.title("🔐 Acesso Restrito")
+            st.title(":material/login: Login")
             
             with st.form(key="form_login"):
                 email = st.text_input("E-mail")
@@ -96,7 +93,6 @@ def botao_logout():
         cookie_manager.delete("sb_access_token", key="delete_access")
         cookie_manager.delete("sb_refresh_token", key="delete_refresh")
         try:
-            # Opcional: Avisa o servidor para matar o token
             st.session_state["supabase"].auth.sign_out()
         except:
             pass
@@ -304,15 +300,14 @@ def popup_detalhar_material(supabase, lista_material):
         # Criar DataFrame para exibir
         df_material = pd.DataFrame(lista_material)
         df_material.loc[:, "Data"] = pd.to_datetime(df_material["Data"], dayfirst=True).dt.date
-        df_material.loc[:, "Seleção"] = df_material["Quantidade"].isna()
+        df_material.loc[:, "Detalhar"] = False
         df_material = df_material.astype({
             "Detalhes": "string",
             "Obra": "string",
             "Categoria": "string",
             "Valor": "float",
-            "Quantidade": "float",
             "Descrição": "string",
-            "Seleção": "boolean",
+            "Detalhar": "boolean",
         })
 
         data_editor = st.data_editor(
@@ -323,9 +318,8 @@ def popup_detalhar_material(supabase, lista_material):
                 "Obra": st.column_config.TextColumn(label="Obra", disabled=True),
                 "Categoria": st.column_config.TextColumn(label="Categoria", disabled=True),
                 "Valor": st.column_config.NumberColumn(label="Valor (R$)", disabled=True, format="R$ %.2f"),
-                "Quantidade": st.column_config.NumberColumn(label="Quantidade", disabled=True),
                 "Descrição": st.column_config.TextColumn(label="Descrição", disabled=True),
-                "Seleção": st.column_config.CheckboxColumn(label="Selecionar", default=False),
+                "Detalhar": st.column_config.CheckboxColumn(label="Detalhar", default=False),
             },
             width="stretch",
             hide_index=True,
@@ -339,7 +333,7 @@ def popup_detalhar_material(supabase, lista_material):
                 
         with col_confirm:
             if st.button("Continuar", type="primary", width="stretch"):
-                if not data_editor["Seleção"].all():
+                if not data_editor["Detalhar"].all():
                     # Buscar Obras para obter IDs
                     response = supabase.table("obras").select("id, Nome").execute()
                     obras_dict = {row["Nome"]: row["id"] for row in response.data} # Cria um mapa {Nome: ID}
@@ -351,20 +345,15 @@ def popup_detalhar_material(supabase, lista_material):
                         "obra_id": obras_dict[row["Obra"].upper()],
                         "Categoria": row["Categoria"],
                         "Valor": row["Valor"],
-                        "Quantidade": row["Quantidade"],
                         "Descrição": row["Descrição"],
-                    } for index, row in data_editor.loc[~data_editor["Seleção"]].iterrows()]
+                    } for index, row in data_editor.loc[~data_editor["Detalhar"]].iterrows()]
 
-                    if any([pd.isna(row["Quantidade"]) for row in lista_envio]):
-                        col_info.error("Por favor, preencha a coluna 'Quantidade' para todas as movimentações não selecionadas.")
-                        st.stop()
-                    else:
-                        salvar_movimentacao(supabase, lista_envio, col_info)
-                        time.sleep(1)
+                    salvar_movimentacao(supabase, lista_envio, col_info)
+                    time.sleep(1)
 
-                if data_editor["Seleção"].any():
+                if data_editor["Detalhar"].any():
                     # Entrar no modo de detalhamento
-                    st.session_state["df_selecionado"] = data_editor.loc[data_editor["Seleção"] == True]
+                    st.session_state["df_selecionado"] = data_editor.loc[data_editor["Detalhar"] == True]
                     st.session_state["modal"] = "Detalhar"
                     st.rerun(scope="fragment")
 
@@ -376,13 +365,13 @@ def popup_detalhar_material(supabase, lista_material):
 
         # Formulário visual
         with st.form("form_detalhar_material"):
-            col1, col2, col3, col4, col5, col6 = st.columns(6)
-            data = col1.date_input(label="Data", value=df_selecionado.iloc[0]["Data"], disabled=True)
-            detalhes = col2.text_input("Detalhes", value=df_selecionado.iloc[0]["Detalhes"], disabled=True)
-            obra = col3.text_input("Obra", value=df_selecionado.iloc[0]["Obra"].upper(), disabled=True)
-            categoria = col4.text_input("Categoria", value=df_selecionado.iloc[0]["Categoria"], disabled=True)
-            valor_total = col5.number_input("Valor Total (R$)", value=df_selecionado.iloc[0]["Valor"], format="%.2f", disabled=True)
-            descricao = col6.text_input("Descrição", value=df_selecionado.iloc[0]["Descrição"], disabled=True)
+            col1, col2, col3, col4, col5 = st.columns(5)
+            data = col2.date_input(label="Data", value=df_selecionado.iloc[0]["Data"], disabled=True)
+            detalhes = col3.text_input("Detalhes", value=df_selecionado.iloc[0]["Detalhes"], disabled=True)
+            obra = col4.text_input("Obra", value=df_selecionado.iloc[0]["Obra"].upper(), disabled=True)
+            categoria = col2.text_input("Categoria", value=df_selecionado.iloc[0]["Categoria"], disabled=True)
+            valor_total = col3.number_input("Valor Total (R$)", value=df_selecionado.iloc[0]["Valor"], format="%.2f", disabled=True)
+            descricao = col4.text_input("Descrição", value=df_selecionado.iloc[0]["Descrição"], disabled=True)
             
             # Criamos um DataFrame vazio para servir de template
             df_template = pd.DataFrame({
@@ -402,57 +391,59 @@ def popup_detalhar_material(supabase, lista_material):
                     "Valor (R$)": st.column_config.NumberColumn(min_value=0.0, format="R$ %.2f", required=True)
                 },
                 hide_index=True,
-                width="stretch"
+                width="stretch",
             )
-
-            if not itens_compra['Valor (R$)'].empty:
-                total_calculado = itens_compra["Valor (R$)"].sum()
 
             # Botão de salvar
             if st.form_submit_button("Salvar Movimentação", type="primary"):
-                # Verificar o valor total
-                if abs(total_calculado - valor_total) > 0:
-                    st.error(f"A soma do valor dos itens (R\\$ {total_calculado:.2f}) é diferente do valor total do extrato (R\\$ {valor_total:.2f}).")
-                    st.stop()
+                if itens_compra.empty:
+                    st.error("Por favor, adicione ao menos um item para detalhar a compra.")
                 else:
-                    # Buscar Obras para obter IDs
-                    response = supabase.table("obras").select("id, Nome").execute()
-                    obras_dict = {row["Nome"]: row["id"] for row in response.data} # Cria um mapa {Nome: ID}
-                    obra_id = obras_dict[obra]
-                    try:
-                        # Inserir como uma única movimentação com detalhamento em JSON
-                        itens_list = []
-                        for _, row in itens_compra.iterrows():
-                            itens_list.append({
-                                "Item": row["Item"],
-                                "Subcategoria": row["Subcategoria"],
-                                "Quantidade": row["Quantidade"],
-                                "Valor": row["Valor (R$)"]
-                            })
+                    # Verificar o valor total
+                    total_calculado = itens_compra["Valor (R$)"].sum()
 
-                        lista_envio = [{
-                            "obra_id": obra_id,
-                            "Data": data.isoformat(),
-                            "Detalhes": detalhes,
-                            "Categoria": categoria,
-                            "Valor": valor_total,
-                            "Descrição": descricao,
-                            "Itens": itens_list
-                        }]
+                    if abs(total_calculado - valor_total) > 0:
+                        st.error(f"A soma do valor dos itens (R\\$ {total_calculado:.2f}) é diferente do valor total do extrato (R\\$ {valor_total:.2f}).")
+                        st.stop()
+                    else:
+                        # Buscar Obras para obter IDs
+                        response = supabase.table("obras").select("id, Nome").execute()
+                        obras_dict = {row["Nome"]: row["id"] for row in response.data} # Cria um mapa {Nome: ID}
+                        obra_id = obras_dict[obra]
+                        try:
+                            # Inserir como uma única movimentação com detalhamento em JSON
+                            itens_list = []
+                            for _, row in itens_compra.iterrows():
+                                itens_list.append({
+                                    "Item": row["Item"],
+                                    "Subcategoria": row["Subcategoria"],
+                                    "Quantidade": row["Quantidade"],
+                                    "Valor": row["Valor (R$)"]
+                                })
 
-                        salvar_movimentacao(supabase, lista_envio)
-                        time.sleep(1)
-                        
-                        # Remover a movimentação já detalhada da lista
-                        df_selecionado = df_selecionado.drop(df_selecionado.index[0])
-                        if len(df_selecionado) > 0:
-                            st.session_state["df_selecionado"] = df_selecionado
-                            st.rerun(scope="fragment")
-                        else:
-                            del st.session_state["modal"]
-                            del st.session_state["df_selecionado"]
-                            st.rerun(scope="app")
+                            lista_envio = [{
+                                "obra_id": obra_id,
+                                "Data": data.isoformat(),
+                                "Detalhes": detalhes,
+                                "Categoria": categoria,
+                                "Valor": valor_total,
+                                "Descrição": descricao,
+                                "Itens": itens_list
+                            }]
 
-                    except Exception as e:
-                        st.error(f"Erro ao salvar no banco de dados: {e}")
+                            salvar_movimentacao(supabase, lista_envio)
+                            time.sleep(1)
+                            
+                            # Remover a movimentação já detalhada da lista
+                            df_selecionado = df_selecionado.drop(df_selecionado.index[0])
+                            if len(df_selecionado) > 0:
+                                st.session_state["df_selecionado"] = df_selecionado
+                                st.rerun(scope="fragment")
+                            else:
+                                del st.session_state["modal"]
+                                del st.session_state["df_selecionado"]
+                                st.rerun(scope="app")
+
+                        except Exception as e:
+                            st.error(f"Erro ao salvar no banco de dados: {e}")
                         

@@ -1,5 +1,4 @@
 import streamlit as st
-from supabase import create_client
 import datetime
 import sys
 import os
@@ -15,19 +14,7 @@ utils.reduzir_espaco_topo()
 utils.adicionar_watermark()
 
 # --- Conexão com Supabase ---
-def init_connection():
-    url = st.secrets["supabase"]["url"]
-    key = st.secrets["supabase"]["key"]
-    return create_client(url, key)
-
-if "supabase" not in st.session_state:
-    st.session_state["supabase"] = init_connection()
-
 supabase = st.session_state["supabase"]
-
-# --- Segurança ---
-
-usuario = utils.verificar_login(supabase)
 
 # --- Título da Página ---
 
@@ -93,4 +80,3 @@ with st.form("form_cadastro_obra"):
             utils.salvar_obra(supabase, lista_envio)
         except Exception as e:
             st.error(f"Erro ao salvar no banco de dados: {e}")
-
