@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import utils
 
 # --- Configuração Inicial ---
-st.set_page_config(page_title="Cadastro de Obras", layout="wide")
+st.set_page_config(page_title="Cadastro de Obras")
 
 utils.sidebar_config()
 utils.reduzir_espaco_topo()

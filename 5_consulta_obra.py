@@ -7,7 +7,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import utils
 
-st.set_page_config(page_title="Consultar Obra", layout="wide")
+st.set_page_config(page_title="Consultar Obra")
 
 utils.sidebar_config()
 utils.reduzir_espaco_topo()

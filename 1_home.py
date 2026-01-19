@@ -5,10 +5,7 @@ import utils
 
 # --- Configuração da Página ---
 st.set_page_config(
-    page_title="Gestão de Obras - Visão Geral",
-    page_icon="🏗️",
-    layout="wide"
-)
+    page_title="Gestão de Obras - Visão Geral", page_icon="🏗️")
 
 utils.sidebar_config()
 utils.reduzir_espaco_topo()
