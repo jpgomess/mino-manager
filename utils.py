@@ -12,6 +12,7 @@ from PIL import Image
 SUBCATEGORIAS_MATERIAIS = ["Geral", "Elétrica", "Hidráulica", "Pintura"]
 
 # --- GERENCIADOR DE COOKIES ---
+@st.cache_resource
 def get_manager():
     if "cookie_manager" not in st.session_state:
         st.session_state["cookie_manager"] = stx.CookieManager(key="session_cookie_manager")
