@@ -12,12 +12,10 @@ from PIL import Image
 SUBCATEGORIAS_MATERIAIS = ["Geral", "Elétrica", "Hidráulica", "Pintura"]
 
 # --- GERENCIADOR DE COOKIES ---
-# O @st.cache_resource garante que o gerenciador seja carregado apenas uma vez
-@st.cache_resource()
 def get_manager():
-    return stx.CookieManager()
-
-cookie_manager = get_manager()
+    if "cookie_manager" not in st.session_state:
+        st.session_state["cookie_manager"] = stx.CookieManager()
+    return st.session_state["cookie_manager"]
 
 # --- Funções de Login ---
 
@@ -31,6 +29,7 @@ def recuperar_sessao(supabase):
         return st.session_state["usuario_logado"]
 
     # 2. Tenta recuperar TOKENS do Cookie
+    cookie_manager = get_manager()
     access_token = cookie_manager.get(cookie="sb_access_token")
     refresh_token = cookie_manager.get(cookie="sb_refresh_token")
     
@@ -54,6 +53,8 @@ def recuperar_sessao(supabase):
 def tela_login(supabase):
     """Login que salva Access Token E Refresh Token"""
     st.markdown("<style> [data-testid='stSidebar'] {display: none;} </style>", unsafe_allow_html=True)
+    
+    cookie_manager = get_manager()
     
     login_placeholder = st.empty()
 
@@ -88,6 +89,7 @@ def tela_login(supabase):
 
 def botao_logout():
     if st.sidebar.button("Sair"):
+        cookie_manager = get_manager()
         st.session_state["usuario_logado"] = None
         # Limpa os dois cookies
         cookie_manager.delete("sb_access_token", key="delete_access")
