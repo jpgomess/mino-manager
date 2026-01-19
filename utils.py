@@ -6,18 +6,23 @@ import base64
 import time
 import os
 
+from supabase import create_client
 from PIL import Image
 
 # --- CONSTANTES GLOBAIS ---
+
 SUBCATEGORIAS_MATERIAIS = ["Geral", "Elétrica", "Hidráulica", "Pintura"]
 
-# --- GERENCIADOR DE COOKIES ---
-# O @st.cache_resource garante que o gerenciador seja carregado apenas uma vez
-@st.cache_resource()
-def get_manager():
-    return stx.CookieManager()
+# --- Conexão com o Supabase ---
 
-cookie_manager = get_manager()
+@st.cache_resource
+def get_supabase_client():
+    """
+    Cria a conexão com o Supabase apenas uma vez e a mantém em cache.
+    """
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
 
 # --- Funções de Login ---
 
@@ -38,7 +43,6 @@ def recuperar_sessao(supabase):
         try:
             # Injeta os tokens no cliente Supabase para restaurar a sessão
             session = supabase.auth.set_session(access_token, refresh_token)
-            
             if session.user:
                 st.session_state["usuario_logado"] = session.user
                 return session.user
@@ -51,9 +55,12 @@ def recuperar_sessao(supabase):
 
     return None
 
-def tela_login(supabase):
-    """Login que salva Access Token E Refresh Token"""
-    st.markdown("<style> [data-testid='stSidebar'] {display: none;} </style>", unsafe_allow_html=True)
+def pagina_login(supabase):
+    """
+    Esta função será o CONTEÚDO da st.Page de Login.
+    Ela desenha o formulário e gerencia a escrita do cookie.
+    """
+    st.header("Login")
     
     login_placeholder = st.empty()
 
@@ -72,19 +79,22 @@ def tela_login(supabase):
         try:
             res = supabase.auth.sign_in_with_password({"email": email, "password": senha})
             
-            login_placeholder.empty()
-            with st.container(horizontal_alignment="center"):
-                with st.spinner():
-                    time.sleep(1)
-
+            # Define validade
+            expire_date = datetime.datetime.now() + datetime.timedelta(days=7)
+            
+            # Grava Cookies
+            cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, path="/", key="set_access")
+            cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, path="/", key="set_refresh")
+            
+            # Atualiza sessão
             st.session_state["usuario_logado"] = res.user
-            cookie_manager.set("sb_access_token", res.session.access_token, key="set_access")
-            cookie_manager.set("sb_refresh_token", res.session.refresh_token, key="set_refresh")
-
-            st.rerun()
+            
+            st.success("Logado! Redirecionando...")
+            time.sleep(1)
+            st.rerun() # Recarrega o app para o app.py notar a mudança
             
         except Exception as e:
-            col2.error(f"Usuário ou senha incorretos.")
+            st.error(f"Erro ao entrar: {e}")
 
 def botao_logout():
     if st.sidebar.button("Sair"):
