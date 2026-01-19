@@ -1,6 +1,13 @@
 import streamlit as st
-from supabase import create_client
 import utils
+
+from supabase import create_client
+
+# --- Configuração Inicial ---
+st.set_page_config(
+    page_title="Mino Manager", 
+    layout="wide"
+)
 
 # --- Inicialização do Supabase (Global) ---
 if "supabase" not in st.session_state:
@@ -15,12 +22,7 @@ usuario = utils.recuperar_sessao(supabase)
 
 # --- Definição das Páginas ---
 if not usuario:
-    # Se NÃO estiver logado, a única página existente é a de Login
-    # Usamos um wrapper para chamar a função tela_login do utils
-    def pagina_login():
-        utils.tela_login(supabase)
-
-    pg = st.navigation([st.Page(pagina_login, title="Login", icon=":material/login:")])
+    pg = st.navigation([st.Page(lambda: utils.tela_login(supabase), title="Login", icon=":material/login:")])
 
 else:
     # Se ESTIVER logado, carrega a estrutura completa

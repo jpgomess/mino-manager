@@ -14,8 +14,8 @@ SUBCATEGORIAS_MATERIAIS = ["Geral", "Elétrica", "Hidráulica", "Pintura"]
 # --- GERENCIADOR DE COOKIES ---
 def get_manager():
     if "cookie_manager" not in st.session_state:
-        st.session_state["cookie_manager"] = stx.CookieManager()
-    return st.session_state["cookie_manager"]
+        st.session_state["cookie_manager"] = stx.CookieManager(key="session_cookie_manager")
+    return st.session_state.get("cookie_manager")
 
 # --- Funções de Login ---
 
@@ -24,14 +24,17 @@ def recuperar_sessao(supabase):
     Tenta recuperar a sessão via Session State ou Cookies.
     Retorna o objeto User se autenticado, ou None se não autenticado.
     """
+    # Verifica se o usuário acabou de fazer logout para evitar relogin automático imediato
+    if st.session_state.get("logout_flag"):
+        return None
+
     # 1. Se o usuário já está logado na session_state, retorna o usuário.
     if "usuario_logado" in st.session_state and st.session_state["usuario_logado"]:
         return st.session_state["usuario_logado"]
 
     # 2. Tenta recuperar TOKENS do Cookie
-    cookie_manager = get_manager()
-    access_token = cookie_manager.get(cookie="sb_access_token")
-    refresh_token = cookie_manager.get(cookie="sb_refresh_token")
+    access_token = st.context.cookies.get("sb_access_token")
+    refresh_token = st.context.cookies.get("sb_refresh_token")
     
     if access_token and refresh_token:
         try:
@@ -52,14 +55,14 @@ def recuperar_sessao(supabase):
 
 def tela_login(supabase):
     """Login que salva Access Token E Refresh Token"""
-    st.markdown("<style> [data-testid='stSidebar'] {display: none;} </style>", unsafe_allow_html=True)
+    # st.markdown("<style> [data-testid='stSidebar'] {display: none;} </style>", unsafe_allow_html=True)
     
     cookie_manager = get_manager()
     
     login_placeholder = st.empty()
 
     with login_placeholder.container():
-        col1, col2, col3 = st.columns([1, 2, 1])
+        col1, col2, col3 = st.columns(3)
         
         with col2:
             st.title(":material/login: Login")
@@ -79,9 +82,13 @@ def tela_login(supabase):
                     time.sleep(1)
 
             st.session_state["usuario_logado"] = res.user
+            if "logout_flag" in st.session_state:
+                del st.session_state["logout_flag"]
+            
             cookie_manager.set("sb_access_token", res.session.access_token, key="set_access")
             cookie_manager.set("sb_refresh_token", res.session.refresh_token, key="set_refresh")
 
+            time.sleep(0.5)
             st.rerun()
             
         except Exception as e:
@@ -89,15 +96,18 @@ def tela_login(supabase):
 
 def botao_logout():
     if st.sidebar.button("Sair"):
-        cookie_manager = get_manager()
         st.session_state["usuario_logado"] = None
-        # Limpa os dois cookies
+        st.session_state["logout_flag"] = True
+        
+        cookie_manager = get_manager()
         cookie_manager.delete("sb_access_token", key="delete_access")
         cookie_manager.delete("sb_refresh_token", key="delete_refresh")
+
         try:
             st.session_state["supabase"].auth.sign_out()
         except:
             pass
+
         time.sleep(0.5)
         st.rerun()
 
