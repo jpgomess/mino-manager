@@ -1,5 +1,6 @@
+extra-streamlit-components
 streamlit
+openpyxl
 supabase
 pandas
 plotly
-extra-streamlit-components
