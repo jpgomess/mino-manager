@@ -5,7 +5,6 @@ import datetime
 import base64
 import time
 import os
-import uuid
 
 from PIL import Image
 
@@ -14,9 +13,7 @@ SUBCATEGORIAS_MATERIAIS = ["Geral", "Elétrica", "Hidráulica", "Pintura"]
 
 # --- GERENCIADOR DE COOKIES ---
 def get_manager():
-    if "cookie_key" not in st.session_state:
-        st.session_state["cookie_key"] = f"cookie_mgr_{uuid.uuid4()}"
-    return stx.CookieManager(key=st.session_state["cookie_key"])
+    return stx.CookieManager(key="session_cookie_manager")
 
 # --- Funções de Login ---
 
