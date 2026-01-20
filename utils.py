@@ -41,7 +41,7 @@ def recuperar_sessao(supabase):
     
     # Se não encontrou no contexto, tenta via CookieManager (Componente JS)
     if (not access_token or not refresh_token) and "cookie_manager" in st.session_state:
-        cookies = st.session_state["cookie_manager"].get_all()
+        cookies = st.session_state["cookie_manager"].get_all(key="get_all_mngr")
         access_token = cookies.get("sb_access_token")
         refresh_token = cookies.get("sb_refresh_token")
     
