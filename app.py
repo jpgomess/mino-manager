@@ -9,6 +9,21 @@ st.set_page_config(
     layout="wide"
 )
 
+# --- DIAGNÓSTICO DE COOKIES (Remover após corrigir) ---
+import datetime
+st.sidebar.header("🔧 Debug Cookies")
+if hasattr(st, "context") and hasattr(st.context, "cookies"):
+    cookies_presentes = st.context.cookies
+    st.sidebar.write(f"Cookies Detectados: {len(cookies_presentes)}")
+    if "sb_access_token" in cookies_presentes:
+        st.sidebar.success("✅ Token de Acesso Encontrado")
+    else:
+        st.sidebar.error("❌ Token de Acesso AUSENTE")
+else:
+    st.sidebar.warning("⚠️ st.context.cookies não disponível")
+st.sidebar.write(f"Hora Servidor: {datetime.datetime.now().strftime('%H:%M:%S')}")
+# ------------------------------------------------------
+
 # --- Inicialização do Supabase (Global) ---
 if "supabase" not in st.session_state:
     url = st.secrets["supabase"]["url"]
