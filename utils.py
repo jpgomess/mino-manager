@@ -72,7 +72,7 @@ def tela_login(supabase):
     login_placeholder = st.empty()
 
     with login_placeholder.container():
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3 = st.columns([1,2,1])
         
         with col2:
             st.title(":material/login: Login")
