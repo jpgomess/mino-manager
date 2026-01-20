@@ -35,6 +35,10 @@ def recuperar_sessao(supabase):
     if "cookie_manager" in st.session_state:
         print("Lendo cookies...", flush=True)
         cookies = st.session_state["cookie_manager"].get_all(key="get_all_mngr")
+
+        if cookies is None:
+            st.stop()
+
         access_token = cookies.get("sb_access_token")
         refresh_token = cookies.get("sb_refresh_token")
         print("Cookies lidos!", flush=True)
