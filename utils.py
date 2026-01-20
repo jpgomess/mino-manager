@@ -32,13 +32,18 @@ def recuperar_sessao(supabase):
         return st.session_state["usuario_logado"]
 
     # 2. Tenta recuperar TOKENS do Cookie
+    access_token = None
+    refresh_token = None
+
     if hasattr(st, "context") and hasattr(st.context, "cookies"):
         access_token = st.context.cookies.get("sb_access_token")
         refresh_token = st.context.cookies.get("sb_refresh_token")
-    # Fallback para versões antigas ou caso st.context falhe (usa o manager instanciado no app.py)
-    elif "cookie_manager" in st.session_state:
-        access_token = st.session_state["cookie_manager"].get("sb_access_token")
-        refresh_token = st.session_state["cookie_manager"].get("sb_refresh_token")
+    
+    # Se não encontrou no contexto, tenta via CookieManager (Componente JS)
+    if (not access_token or not refresh_token) and "cookie_manager" in st.session_state:
+        cookies = st.session_state["cookie_manager"].get_all()
+        access_token = cookies.get("sb_access_token")
+        refresh_token = cookies.get("sb_refresh_token")
     
     if access_token and refresh_token:
         try:
@@ -90,18 +95,14 @@ def tela_login(supabase):
             if "logout_flag" in st.session_state:
                 del st.session_state["logout_flag"]
             
-            # Define validade para 7 dias em UTC (Evita problemas de fuso horário)
-            expire_date = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)
+            # Define validade para 7 dias (Usa datetime naive para evitar erro de serialização/tela branca)
+            expire_date = datetime.datetime.now() + datetime.timedelta(days=7)
             
             cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, key="set_access")
             cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, key="set_refresh")
 
-            # time.sleep(3) 
-            # st.rerun()
-            
-            st.success("Login autorizado! Os cookies foram enviados ao navegador.")
-            st.warning("⚠️ DIAGNÓSTICO: Aguarde alguns segundos e clique no botão abaixo para entrar.")
-            st.button("Confirmar e Entrar", type="primary", on_click=st.rerun)
+            time.sleep(2) 
+            st.rerun()
             
         except Exception as e:
             col2.error(f"Usuário ou senha incorretos.")
