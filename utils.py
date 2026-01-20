@@ -98,8 +98,8 @@ def tela_login(supabase):
             # Define validade para 7 dias (Usa datetime naive para evitar erro de serialização/tela branca)
             expire_date = datetime.datetime.now() + datetime.timedelta(days=7)
             
-            cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, key="set_access", sameSite="None", secure=True)
-            cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, key="set_refresh", sameSite="None", secure=True)
+            cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, key="set_access", sameSite="None")
+            cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, key="set_refresh", sameSite="None")
 
             time.sleep(2)
             
