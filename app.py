@@ -22,6 +22,11 @@ if hasattr(st, "context") and hasattr(st.context, "cookies"):
 else:
     st.sidebar.warning("⚠️ st.context.cookies não disponível")
 st.sidebar.write(f"Hora Servidor: {datetime.datetime.now().strftime('%H:%M:%S')}")
+
+# Teste Manual de Escrita (Diagnóstico)
+if st.sidebar.button("🧪 Testar Gravação de Cookie"):
+    st.session_state["cookie_manager"].set("teste_cloud", "funcionou", key="cmd_teste")
+    st.sidebar.info("Comando enviado. Aguarde 2s e recarregue a página manualmente.")
 # ------------------------------------------------------
 
 # --- Inicialização do Supabase (Global) ---

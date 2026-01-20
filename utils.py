@@ -96,8 +96,12 @@ def tela_login(supabase):
             cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, key="set_access")
             cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, key="set_refresh")
 
-            time.sleep(3) # Aumentado para 3s para compensar latência na nuvem
-            st.rerun()
+            # time.sleep(3) 
+            # st.rerun()
+            
+            st.success("Login autorizado! Os cookies foram enviados ao navegador.")
+            st.warning("⚠️ DIAGNÓSTICO: Aguarde alguns segundos e clique no botão abaixo para entrar.")
+            st.button("Confirmar e Entrar", type="primary", on_click=st.rerun)
             
         except Exception as e:
             col2.error(f"Usuário ou senha incorretos.")
