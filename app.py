@@ -23,8 +23,7 @@ if "cookie_manager" not in st.session_state:
     st.session_state["cookie_manager"] = utils.get_manager()
 
 # --- Verificação de Autenticação ---
-usuario, mode = utils.recuperar_sessao(supabase)
-st.write(f"Modo de recuperação de sessão: {mode}")
+usuario = utils.recuperar_sessao(supabase)
 
 # --- Definição das Páginas ---
 if not usuario:
