@@ -12,11 +12,8 @@ from PIL import Image
 SUBCATEGORIAS_MATERIAIS = ["Geral", "Elétrica", "Hidráulica", "Pintura"]
 
 # --- GERENCIADOR DE COOKIES ---
-@st.cache_resource
 def get_manager():
-    if "cookie_manager" not in st.session_state:
-        st.session_state["cookie_manager"] = stx.CookieManager(key="session_cookie_manager")
-    return st.session_state.get("cookie_manager")
+    return stx.CookieManager(key="session_cookie_manager")
 
 # --- Funções de Login ---
 
@@ -25,8 +22,6 @@ def recuperar_sessao(supabase):
     Tenta recuperar a sessão via Session State ou Cookies.
     Retorna o objeto User se autenticado, ou None se não autenticado.
     """
-
-    cookie_manager = get_manager()
 
     # Verifica se o usuário acabou de fazer logout para evitar relogin automático imediato
     if st.session_state.get("logout_flag"):
@@ -37,8 +32,13 @@ def recuperar_sessao(supabase):
         return st.session_state["usuario_logado"]
 
     # 2. Tenta recuperar TOKENS do Cookie
-    access_token = cookie_manager.get("sb_access_token")
-    refresh_token = cookie_manager.get("sb_refresh_token")
+    if hasattr(st, "context") and hasattr(st.context, "cookies"):
+        access_token = st.context.cookies.get("sb_access_token")
+        refresh_token = st.context.cookies.get("sb_refresh_token")
+    else:
+        cookie_manager = get_manager()
+        access_token = cookie_manager.get("sb_access_token")
+        refresh_token = cookie_manager.get("sb_refresh_token")
     
     if access_token and refresh_token:
         try:
