@@ -89,10 +89,13 @@ def tela_login(supabase):
             if "logout_flag" in st.session_state:
                 del st.session_state["logout_flag"]
             
-            cookie_manager.set("sb_access_token", res.session.access_token, key="set_access")
-            cookie_manager.set("sb_refresh_token", res.session.refresh_token, key="set_refresh")
+            # Define validade para 7 dias (Torna o cookie persistente e resistente a refresh)
+            expire_date = datetime.datetime.now() + datetime.timedelta(days=7)
+            
+            cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, key="set_access")
+            cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, key="set_refresh")
 
-            time.sleep(0.5)
+            time.sleep(3) # Aumentado para 3s para compensar latência na nuvem
             st.rerun()
             
         except Exception as e:
