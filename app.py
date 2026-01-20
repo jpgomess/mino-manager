@@ -21,29 +21,8 @@ supabase = st.session_state["supabase"]
 # Instancia uma única vez por execução e salva para uso nas funções de utils
 st.session_state["cookie_manager"] = utils.get_manager()
 
-# --- DIAGNÓSTICO DE COOKIES (Remover após corrigir) ---
-import datetime
-st.sidebar.header("🔧 Debug Cookies")
-if hasattr(st, "context") and hasattr(st.context, "cookies"):
-    cookies_presentes = st.session_state["cookie_manager"].get_all(key="get_all_count").keys()
-    st.sidebar.write(f"Cookies Detectados: {len(cookies_presentes)}")
-    if "sb_access_token" in cookies_presentes:
-        st.sidebar.success("✅ Token de Acesso Encontrado")
-    else:
-        st.sidebar.error("❌ Token de Acesso AUSENTE")
-else:
-    st.sidebar.warning("⚠️ st.context.cookies não disponível")
-st.sidebar.write(f"Hora Servidor: {datetime.datetime.now().strftime('%H:%M:%S')}")
-
-# Teste Manual de Escrita (Diagnóstico)
-if st.sidebar.button("🧪 Testar Gravação de Cookie"):
-    st.session_state["cookie_manager"].set("teste_cloud", "funcionou", key="cmd_teste")
-    st.sidebar.info("Comando enviado. Aguarde 2s e recarregue a página manualmente.")
-# ------------------------------------------------------
-
 # --- Verificação de Autenticação ---
-usuario, mode = utils.recuperar_sessao(supabase)
-st.write(mode)
+usuario = utils.recuperar_sessao(supabase)
 
 # --- Definição das Páginas ---
 if not usuario:
