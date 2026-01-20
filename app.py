@@ -9,6 +9,18 @@ st.set_page_config(
     layout="wide"
 )
 
+# --- Inicialização do Supabase (Global) ---
+if "supabase" not in st.session_state:
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    st.session_state["supabase"] = create_client(url, key)
+
+supabase = st.session_state["supabase"]
+
+# --- Inicialização do CookieManager (Singleton) ---
+# Instancia uma única vez por execução e salva para uso nas funções de utils
+st.session_state["cookie_manager"] = utils.get_manager()
+
 # --- DIAGNÓSTICO DE COOKIES (Remover após corrigir) ---
 import datetime
 st.sidebar.header("🔧 Debug Cookies")
@@ -28,18 +40,6 @@ if st.sidebar.button("🧪 Testar Gravação de Cookie"):
     st.session_state["cookie_manager"].set("teste_cloud", "funcionou", key="cmd_teste")
     st.sidebar.info("Comando enviado. Aguarde 2s e recarregue a página manualmente.")
 # ------------------------------------------------------
-
-# --- Inicialização do Supabase (Global) ---
-if "supabase" not in st.session_state:
-    url = st.secrets["supabase"]["url"]
-    key = st.secrets["supabase"]["key"]
-    st.session_state["supabase"] = create_client(url, key)
-
-supabase = st.session_state["supabase"]
-
-# --- Inicialização do CookieManager (Singleton) ---
-# Instancia uma única vez por execução e salva para uso nas funções de utils
-st.session_state["cookie_manager"] = utils.get_manager()
 
 # --- Verificação de Autenticação ---
 usuario = utils.recuperar_sessao(supabase)
