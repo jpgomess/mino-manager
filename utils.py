@@ -33,10 +33,11 @@ def recuperar_sessao(supabase):
     
     # 2. Tenta recuperar TOKENS do Cookie via CookieManager
     if "cookie_manager" in st.session_state:
+        print("Lendo cookies...")
         cookies = st.session_state["cookie_manager"].get_all(key="get_all_mngr")
         access_token = cookies.get("sb_access_token")
         refresh_token = cookies.get("sb_refresh_token")
-        time.sleep(2)
+        print("Cookies lidos!")
     
     if access_token and refresh_token:
         try:
@@ -93,7 +94,7 @@ def tela_login(supabase):
             
             cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, key="set_access")
             cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, key="set_refresh")
-
+            print("Cookies salvos!")
             time.sleep(2)
             
         except Exception as e:
