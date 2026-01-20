@@ -102,7 +102,7 @@ def tela_login(supabase):
             cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, key="set_refresh")
 
             time.sleep(2) 
-            st.rerun()
+            # st.rerun()
             
         except Exception as e:
             col2.error(f"Usuário ou senha incorretos.")
@@ -121,8 +121,8 @@ def botao_logout():
         except:
             pass
 
-        time.sleep(0.5)
-        st.rerun()
+        time.sleep(2)
+        # st.rerun()
 
 # --- Funções de Configuração Visual ---
 
