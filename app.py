@@ -42,12 +42,12 @@ if st.sidebar.button("🧪 Testar Gravação de Cookie"):
 # ------------------------------------------------------
 
 # --- Verificação de Autenticação ---
-usuario = utils.recuperar_sessao(supabase)
+usuario, mode = utils.recuperar_sessao(supabase)
+st.write(mode)
 
 # --- Definição das Páginas ---
 if not usuario:
     pg = st.navigation([st.Page(lambda: utils.tela_login(supabase), title="Login", icon=":material/login:")])
-
 else:
     # Se ESTIVER logado, carrega a estrutura completa
     pg = st.navigation(
