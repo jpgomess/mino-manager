@@ -32,6 +32,10 @@ if "supabase" not in st.session_state:
 
 supabase = st.session_state["supabase"]
 
+# --- Inicialização do CookieManager (Singleton) ---
+# Instancia uma única vez por execução e salva para uso nas funções de utils
+st.session_state["cookie_manager"] = utils.get_manager()
+
 # --- Verificação de Autenticação ---
 usuario = utils.recuperar_sessao(supabase)
 

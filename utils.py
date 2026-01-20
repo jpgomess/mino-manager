@@ -35,10 +35,10 @@ def recuperar_sessao(supabase):
     if hasattr(st, "context") and hasattr(st.context, "cookies"):
         access_token = st.context.cookies.get("sb_access_token")
         refresh_token = st.context.cookies.get("sb_refresh_token")
-    else:
-        cookie_manager = get_manager()
-        access_token = cookie_manager.get("sb_access_token")
-        refresh_token = cookie_manager.get("sb_refresh_token")
+    # Fallback para versões antigas ou caso st.context falhe (usa o manager instanciado no app.py)
+    elif "cookie_manager" in st.session_state:
+        access_token = st.session_state["cookie_manager"].get("sb_access_token")
+        refresh_token = st.session_state["cookie_manager"].get("sb_refresh_token")
     
     if access_token and refresh_token:
         try:
@@ -61,7 +61,8 @@ def tela_login(supabase):
     """Login que salva Access Token E Refresh Token"""
     # st.markdown("<style> [data-testid='stSidebar'] {display: none;} </style>", unsafe_allow_html=True)
     
-    cookie_manager = get_manager()
+    # Recupera o gerenciador instanciado no app.py
+    cookie_manager = st.session_state["cookie_manager"]
     
     login_placeholder = st.empty()
 
@@ -89,8 +90,8 @@ def tela_login(supabase):
             if "logout_flag" in st.session_state:
                 del st.session_state["logout_flag"]
             
-            # Define validade para 7 dias (Torna o cookie persistente e resistente a refresh)
-            expire_date = datetime.datetime.now() + datetime.timedelta(days=7)
+            # Define validade para 7 dias em UTC (Evita problemas de fuso horário)
+            expire_date = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)
             
             cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, key="set_access")
             cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, key="set_refresh")
@@ -106,7 +107,7 @@ def botao_logout():
         st.session_state["usuario_logado"] = None
         st.session_state["logout_flag"] = True
         
-        cookie_manager = get_manager()
+        cookie_manager = st.session_state["cookie_manager"]
         cookie_manager.delete("sb_access_token", key="delete_access")
         cookie_manager.delete("sb_refresh_token", key="delete_refresh")
 
