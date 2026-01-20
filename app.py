@@ -25,7 +25,7 @@ st.session_state["cookie_manager"] = utils.get_manager()
 import datetime
 st.sidebar.header("🔧 Debug Cookies")
 if hasattr(st, "context") and hasattr(st.context, "cookies"):
-    cookies_presentes = st.session_state["cookie_manager"].get_all().keys()
+    cookies_presentes = st.session_state["cookie_manager"].get_all(key="get_all_count").keys()
     st.sidebar.write(f"Cookies Detectados: {len(cookies_presentes)}")
     if "sb_access_token" in cookies_presentes:
         st.sidebar.success("✅ Token de Acesso Encontrado")
