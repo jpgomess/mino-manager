@@ -30,12 +30,13 @@ def recuperar_sessao(supabase):
     # 1. Se o usuário já está logado na session_state, retorna o usuário.
     if "usuario_logado" in st.session_state and st.session_state["usuario_logado"]:
         return st.session_state["usuario_logado"], "session_state"
-
+    
     # 2. Tenta recuperar TOKENS do Cookie via CookieManager
     if "cookie_manager" in st.session_state:
         cookies = st.session_state["cookie_manager"].get_all(key="get_all_mngr")
         access_token = cookies.get("sb_access_token")
         refresh_token = cookies.get("sb_refresh_token")
+        time.sleep(2)
     
     if access_token and refresh_token:
         try:
