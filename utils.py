@@ -36,7 +36,7 @@ def recuperar_sessao(supabase):
         print("Lendo cookies...", flush=True)
         cookies = st.session_state["cookie_manager"].get_all(key="get_all_mngr")
 
-        if cookies is None:
+        if not cookies:
             print("Nenhum cookie encontrado.", flush=True)
             st.stop()
 
