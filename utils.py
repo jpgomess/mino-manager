@@ -25,11 +25,11 @@ def recuperar_sessao(supabase):
 
     # Verifica se o usuário acabou de fazer logout para evitar relogin automático imediato
     if st.session_state.get("logout_flag"):
-        return None
+        return None, "logout"
 
     # 1. Se o usuário já está logado na session_state, retorna o usuário.
     if "usuario_logado" in st.session_state and st.session_state["usuario_logado"]:
-        return st.session_state["usuario_logado"]
+        return st.session_state["usuario_logado"], "session_state"
 
     # 2. Tenta recuperar TOKENS do Cookie
     access_token = None
@@ -38,12 +38,14 @@ def recuperar_sessao(supabase):
     if hasattr(st, "context") and hasattr(st.context, "cookies"):
         access_token = st.context.cookies.get("sb_access_token")
         refresh_token = st.context.cookies.get("sb_refresh_token")
+        mode = "tokens (context)"
     
     # Se não encontrou no contexto, tenta via CookieManager (Componente JS)
     if (not access_token or not refresh_token) and "cookie_manager" in st.session_state:
         cookies = st.session_state["cookie_manager"].get_all(key="get_all_mngr")
         access_token = cookies.get("sb_access_token")
         refresh_token = cookies.get("sb_refresh_token")
+        mode = "tokens (CookieManager)"
     
     if access_token and refresh_token:
         try:
@@ -52,7 +54,7 @@ def recuperar_sessao(supabase):
             
             if session.user:
                 st.session_state["usuario_logado"] = session.user
-                return session.user
+                return session.user, mode
                 
         except Exception as e:
             # Se o token expirou ou é inválido, o set_session falhará.
@@ -60,7 +62,7 @@ def recuperar_sessao(supabase):
             st.warning(f"Sua sessão expirou. Por favor, faça login novamente.")
             pass
 
-    return None
+    return None, "None"
 
 def tela_login(supabase):
     """Login que salva Access Token E Refresh Token"""

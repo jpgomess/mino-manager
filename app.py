@@ -22,7 +22,8 @@ supabase = st.session_state["supabase"]
 st.session_state["cookie_manager"] = utils.get_manager()
 
 # --- Verificação de Autenticação ---
-usuario = utils.recuperar_sessao(supabase)
+usuario, mode = utils.recuperar_sessao(supabase)
+st.write(f"Modo de recuperação de sessão: {mode}")
 
 # --- Definição das Páginas ---
 if not usuario:
