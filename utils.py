@@ -30,18 +30,14 @@ def recuperar_sessao(supabase):
     # 1. Se o usuário já está logado na session_state, retorna o usuário.
     if "usuario_logado" in st.session_state and st.session_state["usuario_logado"]:
         return st.session_state["usuario_logado"]
-
-    # 2. Tenta recuperar TOKENS do Cookie
-    access_token = None
-    refresh_token = None
-
-    if hasattr(st, "context") and hasattr(st.context, "cookies"):
-        access_token = st.context.cookies.get("sb_access_token")
-        refresh_token = st.context.cookies.get("sb_refresh_token")
     
-    # Se não encontrou no contexto, tenta via CookieManager (Componente JS)
-    if (not access_token or not refresh_token) and "cookie_manager" in st.session_state:
+    # 2. Tenta recuperar TOKENS do Cookie via CookieManager
+    if "cookie_manager" in st.session_state:
         cookies = st.session_state["cookie_manager"].get_all(key="get_all_mngr")
+
+        if not cookies:
+            st.stop()
+
         access_token = cookies.get("sb_access_token")
         refresh_token = cookies.get("sb_refresh_token")
     
@@ -83,6 +79,7 @@ def tela_login(supabase):
                 submit = st.form_submit_button("Entrar", type="primary", use_container_width=True)
                 
     if submit:
+        print("Fazendo login...", flush=True)
         try:
             res = supabase.auth.sign_in_with_password({"email": email, "password": senha})
             
@@ -100,7 +97,7 @@ def tela_login(supabase):
             
             cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, key="set_access")
             cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, key="set_refresh")
-
+            
             time.sleep(2)
             
         except Exception as e:
