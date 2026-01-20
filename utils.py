@@ -25,11 +25,11 @@ def recuperar_sessao(supabase):
 
     # Verifica se o usuário acabou de fazer logout para evitar relogin automático imediato
     if st.session_state.get("logout_flag"):
-        return None
+        return None, "logout"
 
     # 1. Se o usuário já está logado na session_state, retorna o usuário.
     if "usuario_logado" in st.session_state and st.session_state["usuario_logado"]:
-        return st.session_state["usuario_logado"]
+        return st.session_state["usuario_logado"], "session_state"
 
     # 2. Tenta recuperar TOKENS do Cookie
     access_token = None
@@ -52,7 +52,7 @@ def recuperar_sessao(supabase):
             
             if session.user:
                 st.session_state["usuario_logado"] = session.user
-                return session.user
+                return session.user, "tokens"
                 
         except Exception as e:
             # Se o token expirou ou é inválido, o set_session falhará.
@@ -60,7 +60,7 @@ def recuperar_sessao(supabase):
             st.warning(f"Sua sessão expirou. Por favor, faça login novamente.")
             pass
 
-    return None
+    return None, "None"
 
 def tela_login(supabase):
     """Login que salva Access Token E Refresh Token"""
@@ -101,8 +101,7 @@ def tela_login(supabase):
             cookie_manager.set("sb_access_token", res.session.access_token, expires_at=expire_date, key="set_access")
             cookie_manager.set("sb_refresh_token", res.session.refresh_token, expires_at=expire_date, key="set_refresh")
 
-            time.sleep(2) 
-            # st.rerun()
+            time.sleep(2)
             
         except Exception as e:
             col2.error(f"Usuário ou senha incorretos.")
@@ -122,7 +121,6 @@ def botao_logout():
             pass
 
         time.sleep(2)
-        # st.rerun()
 
 # --- Funções de Configuração Visual ---
 
