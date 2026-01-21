@@ -79,7 +79,6 @@ def tela_login(supabase):
                 submit = st.form_submit_button("Entrar", type="primary", use_container_width=True)
                 
     if submit:
-        print("Fazendo login...", flush=True)
         try:
             res = supabase.auth.sign_in_with_password({"email": email, "password": senha})
             
